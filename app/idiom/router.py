@@ -11,19 +11,14 @@ idiom_router = APIRouter(prefix="/api/idiom")
 
 @idiom_router.get('/')
 async def get_idioms(db: AsyncSession = Depends(get_session)):
-    stmt = select(Idiom)
-
-    idioms = await db.execute(stmt)
+    idioms = await db.execute(select(Idiom))
     return idioms.scalars().fetchall()
 
 
 @idiom_router.post("/")
 async def create_idioms(req: IdiomCreate, db: AsyncSession = Depends(get_session)):
+    print('req', req)
     idiom = Idiom(**req.dict())
-
-    db.add(idiom)
-
-    await db.commit()
-    await db.refresh(idiom)
-
+    print('idiom', idiom)
+    await idiom.save(db)
     return idiom
