@@ -15,11 +15,8 @@ log.txt
 Pipfile.lock
 env3.*
 env
+.env
 docs_build
 venv
 docs.zip
 archive.zip
-
-# vim temporary files
-*~
-.*.sw?
