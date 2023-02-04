@@ -18,6 +18,5 @@ env
 .env
 docs_build
 venv
-.idea
 docs.zip
 archive.zip
