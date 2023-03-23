@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from app.idiom.router import idiom_router
+from app.lib.matcher import Matcher
 
 app = FastAPI()
 
@@ -16,3 +17,8 @@ app.add_middleware(
 )
 
 app.include_router(idiom_router)
+
+matcher = Matcher()
+matcher.init()
+
+matcher.find('자기가 저지르고 자기가 해결함')

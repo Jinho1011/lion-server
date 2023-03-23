@@ -1,9 +1,9 @@
 from konlpy.tag import Okt
 import scipy as sp
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 okt = Okt()
-vectorizer = CountVectorizer(min_df=1)
+vectorizer = TfidfVectorizer()
 
 data = [
     {
@@ -84,38 +84,36 @@ stopwords = ['아', '휴', '아이구', '아이쿠', '아이고', '어', '나', 
              '월', '데', '자신', '안', '어떤', '내', '내', '경우', '명', '생각', '시간', '그녀', '다시', '이런', '앞', '보이', '번', '나', '다른',
              '어떻', '여자', '개', '전', '들', '사실', '이렇', '점', '싶', '말', '정도', '좀', '원', '잘', '통하', '놓']
 
-tokens = [okt.morphs(row['meaning']) for row in data]
 
-stopwords_removed_tokens = [word for word in tokens if word not in stopwords]
+class Matcher:
+    X = None
 
-vectorized = [' '.join(token) for token in stopwords_removed_tokens]
+    def init(self) -> object:
+        tokens = [okt.morphs(row['meaning']) for row in data]
+        stopwords_removed_tokens = [word for word in tokens if word not in stopwords]
+        vectorized = [' '.join(token) for token in stopwords_removed_tokens]
+        self.X = vectorizer.fit_transform(vectorized)
 
-X = vectorizer.fit_transform(vectorized)
-print(X)
+    def find(self, target):
+        test_token = ' '.join(okt.morphs(target))
+        test_vector = vectorizer.transform([test_token])
 
-test = ['누구나 자신이 저지른 일은 무슨 일이 있어도 끝까지 책임지고 풀어야 한다는 말이다.']
-test_tokens = [okt.morphs(row) for row in test]
-vectorized_test = [' '.join(token) for token in test_tokens]
-test_vector = vectorizer.transform(vectorized_test)
+        def dist_raw(v1, v2):
+            delta = v1 - v2
+            return sp.linalg.norm(delta.toarray())
 
+        best_doc = None
+        best_dist = 65535
+        best_i = None
 
-def dist_raw(v1, v2):
-    delta = v1 - v2
-    return sp.linalg.norm(delta.toarray())
+        for i in range(0, self.X.shape[0]):
+            post_vec = self.X.getrow(i)
 
+            # 함수 호출
+            d = dist_raw(post_vec, test_vector)
 
-best_doc = None
-best_dist = 65535
-best_i = None
+            print('== Post %i with dist=%.2f : %s' % (i, d, data[i]))
 
-for i in range(0, 4):
-    post_vec = X.getrow(i)
-
-    # 함수 호출
-    d = dist_raw(post_vec, test_vector)
-
-    print('== Post %i with dist=%.2f : %s' % (i, d, data[i]))
-
-    if d < best_dist:
-        best_dist = d
-        best_i = i
+            if d < best_dist:
+                best_dist = d
+                best_i = i
