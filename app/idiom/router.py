@@ -17,8 +17,12 @@ async def get_idioms(db: AsyncSession = Depends(get_session)):
 
 @idiom_router.post("/")
 async def create_idioms(req: IdiomCreate, db: AsyncSession = Depends(get_session)):
-    print('req', req)
     idiom = Idiom(**req.dict())
-    print('idiom', idiom)
     await idiom.save(db)
     return idiom
+
+
+@idiom_router.get("/search/{meaning}")
+async def search_idioms(meaning, db: AsyncSession = Depends(get_session)):
+    idioms = await db.execute(select(Idiom))
+    return idioms.scalars().fetchall()
