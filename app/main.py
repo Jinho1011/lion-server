@@ -19,6 +19,3 @@ app.add_middleware(
 app.include_router(idiom_router)
 
 matcher = Matcher()
-matcher.init()
-
-matcher.find('자기가 저지르고 자기가 해결함')

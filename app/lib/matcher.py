@@ -5,29 +5,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 okt = Okt()
 vectorizer = TfidfVectorizer()
 
-data = [
-    {
-        'hangeul': '결자해지',
-        'meaning': '맺은 사람이 풀어야 한다는 뜻으로, 자기가 저지른 일은 자기가 해결하여야 함을 이르는 말.'
-    },
-    {
-        'hangeul': '결자해지',
-        'meaning': '매듭을 맺은 사람이 풀어야 한다.'
-    },
-    {
-        'hangeul': '결자해지',
-        'meaning': '자기가 저지른 일은 자기가 해결하여야 한다는 말'
-    },
-    {
-        'hangeul': '결자해지',
-        'meaning': '묶은 사람이 풀어야 한다는 뜻으로, 일을 저지른 사람이 그 일을 해결해야 한다는 말.'
-    },
-    {
-        'hangeul': '결자해지',
-        'meaning': '일을 저지른 사람이 그 일을 해결해야 한다는 말'
-    },
-]
-
 stopwords = ['아', '휴', '아이구', '아이쿠', '아이고', '어', '나', '우리', '저희', '따라', '의해', '을', '를', '에', '의', '가', '으로', '로', '에게',
              '뿐이다', '의거하여', '근거하여', '입각하여', '기준으로', '예하면', '예를', '들면', '예를', '들자면', '저', '소인', '소생', '저희', '지말고', '하지마',
              '하지마라', '다른', '물론', '또한', '그리고', '비길수', '없다', '해서는', '안된다', '뿐만', '아니라', '만이', '아니다', '만은', '아니다', '막론하고',
@@ -86,10 +63,15 @@ stopwords = ['아', '휴', '아이구', '아이쿠', '아이고', '어', '나', 
 
 
 class Matcher:
-    X = None
+    def __init__(self):
+        pass
 
-    def init(self) -> object:
-        tokens = [okt.morphs(row['meaning']) for row in data]
+    X = None
+    data = []
+
+    def init(self, idioms) -> object:
+        self.data = idioms
+        tokens = [okt.morphs(idiom.meaning) for idiom in idioms]
         stopwords_removed_tokens = [word for word in tokens if word not in stopwords]
         vectorized = [' '.join(token) for token in stopwords_removed_tokens]
         self.X = vectorizer.fit_transform(vectorized)
@@ -102,18 +84,12 @@ class Matcher:
             delta = v1 - v2
             return sp.linalg.norm(delta.toarray())
 
-        best_doc = None
-        best_dist = 65535
-        best_i = None
+        result = []
 
         for i in range(0, self.X.shape[0]):
             post_vec = self.X.getrow(i)
-
-            # 함수 호출
             d = dist_raw(post_vec, test_vector)
+            result.append({'dist': d, 'data': self.data[i]})
 
-            print('== Post %i with dist=%.2f : %s' % (i, d, data[i]))
-
-            if d < best_dist:
-                best_dist = d
-                best_i = i
+        result.sort(key=lambda x: x['dist'])
+        return list(map(lambda x: x['data'], result))
